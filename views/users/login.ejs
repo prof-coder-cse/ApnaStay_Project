@@ -1,0 +1,43 @@
+<% layout("layout/boilerplate") %>
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+
+      <!-- Flash Messages -->
+      
+
+      <div class="card shadow-sm p-4" style="border-radius: 12px;">
+        <div class="card-body">
+          <h3 class="card-title text-center mb-4" style="font-weight: 600; color: #0d6efd;">Login to WanderLust</h3>
+
+          <form action="/login" method="POST">
+            <!-- Username -->
+            <div class="mb-3">
+              <label for="username" class="form-label">Username</label>
+              <input type="text" class="form-control form-control-lg" id="username" name="username" placeholder="Enter username" required>
+            </div>
+
+            <!-- Password -->
+            <div class="mb-3">
+              <label for="password" class="form-label">Password</label>
+              <input type="password" class="form-control form-control-lg" id="password" name="password" placeholder="Enter password" required>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-grid mt-4">
+              <button type="submit" class="btn btn-primary btn-lg">Login</button>
+            </div>
+          </form>
+
+          <!-- Register Link -->
+          <p class="text-center mt-3 mb-0">
+            Don't have an account? <a href="/signup">Register here</a>
+          </p>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
