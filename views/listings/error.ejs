@@ -1,6 +1,16 @@
 <% layout("layout/boilerplate") %>
-<div class="row mt-3">
-    <div class="alert alert-danger" role="alert">
- <h4><%= message %></h4>
-</div>
+
+<div class="container my-5 text-center" style="max-width: 600px;">
+    <div class="card border-0 shadow-sm rounded-4 p-5 bg-light">
+        <div class="mb-3">
+            <i class="fa-solid fa-triangle-exclamation text-danger fa-4x"></i>
+        </div>
+        <h3 class="fw-bold mb-2">Something Went Wrong</h3>
+        <p class="text-secondary mb-4"><%= message || "The requested action could not be completed." %></p>
+        <div>
+            <a href="/listings" class="btn btn-danger rounded-pill px-4 py-2" style="background-color: #fe424d; border: none;">
+                <i class="fa-solid fa-compass me-1"></i> Return to Listings
+            </a>
+        </div>
+    </div>
 </div>

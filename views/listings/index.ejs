@@ -25,7 +25,6 @@
     .filter p{
         font-size: 0.8rem;
     }
-    </style>
 </style>
 <div id="filters">
     <div class="filter">
@@ -68,42 +67,22 @@
 </div>
 
 
-    <body>
-        <h3>All Listings!</h3>
-        <!-- <form action="listings/new" method="get">
-       <button> Create new listings</button>
-    </form> -->
-        <div class="row row-cols-lg-3 row-cols-md-3 row-cols-sm-1">
-            <%for(let listing of allListings){%>
+        <div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3">
+            <% for(let listing of allListings){ %>
                 <a href="/listings/<%= listing._id %>" class="listing-link">
- <div class="card col listing-card">
-                    <img src="<%= listing.image.url %>" class="card-img-top" alt="listing-img" style="height: 20rem;">
-                    <div class="card-img-overlay">..</div>
-                    <div class="card-body">
-                        <p class="card-text">
-                           <b> <%= listing.title %></b>
+                    <div class="card col listing-card">
+                        <img src="<%= listing.image && listing.image.url ? listing.image.url : 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=60' %>" class="card-img-top" alt="listing-img" style="height: 20rem;">
+                        <div class="card-img-overlay"></div>
+                        <div class="card-body">
+                            <p class="card-text">
+                                <b><%= listing.title %></b>
                                 <br>
-                                Price:&#8377;<%= listing.price %>/Night
-                        </p>
+                                <span>&#8377;<%= listing.price ? listing.price.toLocaleString("en-IN") : 0 %></span> / night
+                                <br>
+                                <small class="text-muted"><%= listing.location %>, <%= listing.country %></small>
+                            </p>
+                        </div>
                     </div>
-                </div>
-                <% } %>
-
-
-
-
                 </a>
-               
-
-
-
+            <% } %>
         </div>
-
-
-
-
-
-
-    </body>
-
-    </html>

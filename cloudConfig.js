@@ -10,13 +10,12 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'wanderlust_DEV',
+    folder: 'apnastay_DEV',
     allowed_formats: ['png',"jpg","jpeg"] // supports promises as well
     
   },
 });
-console.log(cloudinary.config().api_key);
- 
+
 module.exports={
     cloudinary,storage
 }

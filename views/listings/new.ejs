@@ -1,55 +1,121 @@
 <% layout("layout/boilerplate") %>
 
-<div class="row">
-    <div class="col-8 offset-2">
-        <br><br>
-        <h3>Create New Listing</h3>
+<div class="container my-4" style="max-width: 800px;">
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h3 class="fw-bold mb-1">Airbnb Your Home</h3>
+                <p class="text-muted small mb-0">List your property on ApnaStay and welcome travelers from around the world.</p>
+            </div>
+            <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-2">
+                <i class="fa-solid fa-wand-magic-sparkles me-1"></i> AI Enabled
+            </span>
+        </div>
 
-        <form action="/listings" method="post" enctype="multipart/form-data" class="needs-validation" novalidate >
+        <form action="/listings" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+            <!-- Title -->
             <div class="mb-3">
-                <label for="title" class="form-label">Title:</label>
-                <input type="text" name="title" id="title" placeholder="Enter title" class="form-control" >
-                <div class="valid-feedback">Looks good!</div>
-                <div class="invalid-feedback">Title should be valid</div>
+                <label for="title" class="form-label fw-semibold">Listing Title</label>
+                <input type="text" name="title" id="title" placeholder="e.g. Luxury Beachfront Villa with Ocean Views" class="form-control rounded-3" required>
+                <div class="valid-feedback">Looks great!</div>
+                <div class="invalid-feedback">Please enter a catchy title.</div>
             </div>
 
+            <!-- Description with AI Generator -->
             <div class="mb-3">
-                <label for="description" class="form-label">Description:</label>
-                <textarea name="description" id="description" placeholder="Enter description" class="form-control" ></textarea>
-                 <div class="valid-feedback">Looks good!</div>
-                <div class="invalid-feedback">Description should be valid</div>
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label for="description" class="form-label fw-semibold mb-0">Property Description</label>
+                    <button type="button" id="aiGenerateDescBtn" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="generateAiDescription()">
+                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i> ✨ Generate with AI
+                    </button>
+                </div>
+                <textarea name="description" id="description" rows="5" placeholder="Highlight the unique ambiance, comfort, amenities, and nearby hotspots..." class="form-control rounded-3" required></textarea>
+                <div id="aiGenStatus" class="form-text text-muted">Enter a title or location and click "✨ Generate with AI" to auto-write engaging copy.</div>
+                <div class="invalid-feedback">Please enter a description (at least 10 characters).</div>
             </div>
 
-           
-              <div class="mb-3">
-                <label for="image" class="form-label">Upload Image</label>
-                <input type="file" name="image" id="image" placeholder="Enter image url" class="form-control" required>
+            <!-- Image Upload -->
+            <div class="mb-3">
+                <label for="image" class="form-label fw-semibold">Upload Property Cover Image</label>
+                <input type="file" name="image" id="image" class="form-control rounded-3" accept="image/*" required>
+                <div class="invalid-feedback">Please choose an image for your listing.</div>
             </div>
 
-            <div class="row">
-                <div class="mb-3 col-md-4">
-                    <label for="price" class="form-label">Price:</label>
-                    <input type="text" name="price" id="price" placeholder="5500" class="form-control" >
-                     <div class="valid-feedback">Looks good!</div>
-                <div class="invalid-feedback">Enter a valid number</div>
+            <!-- Price & Country -->
+            <div class="row g-3">
+                <div class="col-md-4 mb-3">
+                    <label for="price" class="form-label fw-semibold">Price per Night (₹)</label>
+                    <input type="number" name="price" id="price" placeholder="3500" class="form-control rounded-3" min="100" required>
+                    <div class="invalid-feedback">Please provide a valid price per night.</div>
                 </div>
 
-                <div class="mb-3 col-md-8">
-                    <label for="country" class="form-label">Country:</label>
-                    <input type="text" name="country" id="country" class="form-control" placeholder="India" >
-                     <div class="valid-feedback">Looks good!</div>
-                <div class="invalid-feedback">country should be valid</div>
+                <div class="col-md-8 mb-3">
+                    <label for="country" class="form-label fw-semibold">Country</label>
+                    <input type="text" name="country" id="country" class="form-control rounded-3" placeholder="e.g. India" required>
+                    <div class="invalid-feedback">Please enter the country.</div>
                 </div>
             </div>
 
-            <div class="mb-3">
-                <label for="location" class="form-label">Location:</label>
-                <input type="text" name="location" id="location" class="form-control" placeholder="Delhi, New Delhi" >
-                 <div class="valid-feedback">Looks good!</div>
-                <div class="invalid-feedback">Location should be valid</div>
+            <!-- Location -->
+            <div class="mb-4">
+                <label for="location" class="form-label fw-semibold">City / Location</label>
+                <input type="text" name="location" id="location" class="form-control rounded-3" placeholder="e.g. North Goa, Goa" required>
+                <div class="invalid-feedback">Please specify the property location.</div>
             </div>
 
-            <button class="btn btn-danger">Add</button>
+            <button type="submit" class="btn btn-danger rounded-pill px-5 py-2 fw-semibold" style="background-color: #fe424d; border: none;">
+                <i class="fa-solid fa-plus me-1"></i> Publish Listing
+            </button>
         </form>
     </div>
 </div>
+
+<script>
+async function generateAiDescription() {
+    const titleInput = document.getElementById("title");
+    const locationInput = document.getElementById("location");
+    const countryInput = document.getElementById("country");
+    const descInput = document.getElementById("description");
+    const statusEl = document.getElementById("aiGenStatus");
+    const btn = document.getElementById("aiGenerateDescBtn");
+
+    const title = titleInput ? titleInput.value.trim() : "";
+    const location = locationInput ? locationInput.value.trim() : "";
+    const country = countryInput ? countryInput.value.trim() : "";
+
+    if (!title && !location) {
+        alert("Please enter at least a rough Title or Location first so the AI can craft tailored copy!");
+        if (titleInput) titleInput.focus();
+        return;
+    }
+
+    const originalBtnHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> AI Drafting...`;
+    statusEl.innerHTML = `<span class="text-primary"><i class="fa-solid fa-spinner fa-spin me-1"></i> Generating high-converting listing copy...</span>`;
+
+    try {
+        const res = await fetch("/api/ai/generate-description", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title, location, country, propertyType: "Vacation Stay" })
+        });
+        const data = await res.json();
+
+        if (data && data.data) {
+            descInput.value = data.data.description;
+            if (data.data.title && (!title || title.length < 5)) {
+                titleInput.value = data.data.title;
+            }
+            statusEl.innerHTML = `<span class="text-success fw-semibold"><i class="fa-solid fa-check me-1"></i> AI Description generated successfully! You can review or edit it above.</span>`;
+        } else {
+            statusEl.innerHTML = `<span class="text-danger">Could not generate copy. Please try again.</span>`;
+        }
+    } catch (e) {
+        statusEl.innerHTML = `<span class="text-danger">Network error contacting AI generator.</span>`;
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalBtnHtml;
+    }
+}
+</script>
