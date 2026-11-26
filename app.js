@@ -1,96 +1,6 @@
-// const express=require("express");
-// const app=express();
-// const mongoose=require("mongoose");
-
-// const path=require("path");
-// const methodOverride = require('method-override');
-
-// const ejsMate = require("ejs-mate");
-// const ExpressError = require("./utils/ExpressError.js");
-// app.set("view engine","ejs");
-// app.set("views",path.join(__dirname,"views"));
-// app.use(express.urlencoded({extended:true}));
-// app.use(methodOverride('_method'));
-// app.engine("ejs",ejsMate);
-// app.use(express.static(path.join(__dirname,"/public")));
-
-// const listingRouter=require("./routes/listing.js");
-// const reviewRouter=require("./routes/review.js");
-// const userRouter=require("./routes/user.js");
-// const session=require("express-session");
-// const flash = require("connect-flash");
-// const passport=require("passport");
-// const LocalStrategy=require("passport-local");
-// const User=require("./models/user.js");
-// // USING SESSION
-// const sessionOptions={
-//     secret: "mysupersecretcode",
-//     resave: false,
-//     saveUninitialized: true,
-//     cookie: {
-//         expires: Date.now()+7*24*60*60*1000,
-//         maxAge:7*24*60*60*1000,
-//         httpOnly: true,
-//     }
-
-// }
-// app.get("/",(req,res)=>{
-//     res.send("working");
-// })
-
-// app.use(session(sessionOptions));
-// app.use(flash());
-// app.use(passport.initialize());
-// app.use(passport.session());
-// passport.use(new LocalStrategy(User.authenticate()));
-// passport.serializeUser(User.serializeUser());
-// passport.deserializeUser(User.deserializeUser());
-// app.use((req,res,next)=>{
-//     res.locals.success=req.flash("success");
-//     next();
-// })
-
-// main().then((res)=>{
-//     console.log("connected to db");
-// }).catch((err)=>{
-//     console.log(err);
-// })
-// async function main() {
-//     await mongoose.connect('mongodb://127.0.0.1:27017/wanderlust');
-   
-    
-// }
-
-
-
-// app.use("/listings",listingRouter);
-// app.use("/listings/:id/reviews",reviewRouter)
-// app.use("/",userRouter);
-
-
-
-
-
-// app.all(/.*/,(req,res,next)=>{
-//     next(new ExpressError(404,"page not found"));
-// })
-// app.use((err,req,res,next)=>{
-//     let {status=500,message="Something went wrong"}=err;
-//     // res.status(status).send(message);
-//     res.render("listings/error",{message});
-// })
-
-
-// app.listen(8080,()=>{
-//     console.log("working on port 8080");
-// })
-if(process.env.NODE_ENV != "production"){
-   require('dotenv').config() 
+if (process.env.NODE_ENV != "production") {
+    require("dotenv").config();
 }
-
-console.log(process.env.CLOUD_API_KEY); 
-
-
 
 const express = require("express");
 const app = express();
@@ -104,120 +14,117 @@ const flash = require("connect-flash");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const User = require("./models/user.js");
-const MongoStore = require('connect-mongo');
+const MongoStore = require("connect-mongo");
 
 // ROUTERS
 const listingRouter = require("./routes/listing.js");
 const reviewRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
-const dbUrl=process.env.ATLASDB_URL;
+const bookingRouter = require("./routes/booking.js");
+const aiRouter = require("./routes/ai.js");
+
+// DATABASE CONFIGURATION (Atlas DB or Local MongoDB fallback)
+const dbUrl = process.env.ATLASDB_URL || "mongodb://127.0.0.1:27017/apnastay";
+const secret = process.env.SECRET || "apnastaycollegeprojectsecretkey2026";
 
 // VIEW ENGINE
 app.engine("ejs", ejsMate);
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
-// MIDDLEWARES
+// BODY PARSERS & STATIC FILES
 app.use(express.urlencoded({ extended: true }));
-app.use(methodOverride('_method'));
-// app.use(express.static(path.join(__dirname, "/public")));
+app.use(express.json()); // Essential for AI JSON API requests
+app.use(methodOverride("_method"));
 app.use(express.static(path.join(__dirname, "public")));
 
-const store=MongoStore.create({
-    mongoUrl:dbUrl,
-    crypto:{
-        secret: process.env.SECRET, 
-    },
-    touchAfter:24*3600,
-})
-
-// SESSION
+// SESSION CONFIGURATION
 const sessionOptions = {
-    store,
-    secret:process.env.SECRET,
+    secret: secret,
     resave: false,
     saveUninitialized: true,
     cookie: {
         expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
         maxAge: 7 * 24 * 60 * 60 * 1000,
-        httpOnly: true,
+        httpOnly: true
     }
 };
 
+// Use MongoStore if Atlas DB URL is provided or if configured in production
+if (process.env.ATLASDB_URL) {
+    const store = MongoStore.create({
+        mongoUrl: process.env.ATLASDB_URL,
+        crypto: {
+            secret: secret
+        },
+        touchAfter: 24 * 3600
+    });
+    store.on("error", (err) => {
+        console.log("ERROR in MONGO SESSION STORE:", err);
+    });
+    sessionOptions.store = store;
+}
 
 app.use(session(sessionOptions));
 app.use(flash());
 
-// PASSPORT
+// PASSPORT AUTHENTICATION
 app.use(passport.initialize());
 app.use(passport.session());
 passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-// GLOBAL LOCALS (har view me available honge)
+// GLOBAL LOCALS FOR VIEWS
 app.use((req, res, next) => {
-
     res.locals.success = req.flash("success");
     res.locals.error = req.flash("error");
-    res.locals.currentUser = req.user; // user login ho to template me use kar pao
+    res.locals.currentUser = req.user;
     next();
 });
 
-// ROUTES
+// ROOT ROUTE
 app.get("/", (req, res) => {
-    res.send("working");
+    return res.redirect("/listings");
 });
 
+// MOUNT ROUTERS
 app.use("/listings", listingRouter);
 app.use("/listings/:id/reviews", reviewRouter);
+app.use("/", bookingRouter);
+app.use("/api/ai", aiRouter);
 app.use("/", userRouter);
 
-// ERROR HANDLER
-app.all(/.*/, (req, res, next) => {
-    next(new ExpressError(404, "Page not found"));
+// 404 CATCH-ALL (Express 5 compatible)
+app.use((req, res, next) => {
+    next(new ExpressError(404, "Page Not Found"));
 });
 
+// GLOBAL ERROR HANDLER
 app.use((err, req, res, next) => {
-    console.log(err);
+    console.error("Express Error Caught:", err.message || err);
+    // Delegate to default error handler if headers have already been sent to client
+    if (res.headersSent) {
+        return next(err);
+    }
     let { status = 500, message = "Something went wrong" } = err;
-    res.status(status).render("listings/error", { message });
+    return res.status(status).render("listings/error", { message });
 });
 
-
-main()
-    .then(() => console.log("connected to db"))
-    .catch((err) => console.log(err));
-
+// DATABASE CONNECTION
 async function main() {
     await mongoose.connect(dbUrl);
 }
-// DB CONNECT
-// console.log("Connecting to DB at:", dbUrl);
 
-// async function main() {
-//     try {
-//         await mongoose.connect(dbUrl, {
-//             useNewUrlParser: true,
-//             useUnifiedTopology: true
-//         });
-//         console.log("✅ MongoDB connected successfully");
-//     } catch (err) {
-//         console.error("❌ Failed to connect to MongoDB:", err.message);
-//         process.exit(1); // Exit if DB connection fails
-//     }
-// }
+main()
+    .then(() => console.log("Connected to MongoDB successfully!"))
+    .catch((err) => {
+        console.log("MongoDB connection notice:", err.message);
+        console.log("If running locally, ensure mongod is started: brew services start mongodb-community");
+    });
 
-// main(); // ← CALL THE FUNCTION HERE
-
-// SERVER
-app.listen(8080, () => {
-    console.log("🚀 Server running on port 8080");
-});
-
-
-
-// SERVER
-app.listen(8080, () => {
-    console.log("working on port 8080");
+// SERVER START
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+    console.log(`🚀 ApnaStay Server running on http://localhost:${PORT}`);
 });

@@ -1,62 +1,119 @@
 <% layout("/layout/boilerplate") %>
-<div class="row">
-    <div class="col-8 offset-2">
-        <br><br>
 
-
-<body>
-    <h3>Edit Listing</h3>
-    <form action="/listings/<%= listing._id  %>?_method=PUT" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
-        <div class="mb-3">
- <label for="title" class="form-label">Title:</label>
-    <input type="text" name="title" id="title" class="form-control"  value="<%= listing.title %>" required>
-    <div class="valid-feedback">Looks good!</div>
-                <div class="invalid-feedback">Title should be valid</div>
-
+<div class="container my-4" style="max-width: 800px;">
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <div>
+                <h3 class="fw-bold mb-1">Edit Listing</h3>
+                <p class="text-muted small mb-0">Update property details, photos, or pricing.</p>
+            </div>
+            <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-2">
+                <i class="fa-solid fa-wand-magic-sparkles me-1"></i> AI Polish
+            </span>
         </div>
-   
-   
-    <div class="mb-3">
- <label for="description" class="form-label">Description:</label>
-    <textarea name="description" id="description"class="form-control" required  ><%= listing.description  %></textarea>
-     <div class="valid-feedback">Looks good!</div>
-                <div class="invalid-feedback">Description should be valid</div>
+
+        <form action="/listings/<%= listing._id %>?_method=PUT" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+            <!-- Title -->
+            <div class="mb-3">
+                <label for="title" class="form-label fw-semibold">Title</label>
+                <input type="text" name="title" id="title" class="form-control rounded-3" value="<%= listing.title %>" required>
+                <div class="invalid-feedback">Title should be valid.</div>
+            </div>
+
+            <!-- Description with AI Polish -->
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label for="description" class="form-label fw-semibold mb-0">Description</label>
+                    <button type="button" id="aiPolishDescBtn" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="polishAiDescription()">
+                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i> ✨ Polish with AI
+                    </button>
+                </div>
+                <textarea name="description" id="description" rows="5" class="form-control rounded-3" required><%= listing.description %></textarea>
+                <div id="aiPolishStatus" class="form-text text-muted">Click "✨ Polish with AI" to improve flow, vocabulary, and selling points.</div>
+                <div class="invalid-feedback">Description should be valid.</div>
+            </div>
+
+            <!-- Current Image Preview & Upload New Image -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold d-block">Current Cover Image</label>
+                <% if (listing.image && listing.image.url) { %>
+                    <img src="<%= listing.image.url %>" class="rounded-3 mb-2 shadow-sm" alt="Listing image" style="height: 120px; object-fit: cover;">
+                <% } %>
+                <label for="listing-img" class="form-label small text-muted d-block">Upload New Image (Optional)</label>
+                <input type="file" name="image" id="listing-img" class="form-control rounded-3" accept="image/*">
+            </div>
+
+            <!-- Price & Country -->
+            <div class="row g-3">
+                <div class="col-md-4 mb-3">
+                    <label for="price" class="form-label fw-semibold">Price per Night (₹)</label>
+                    <input type="number" name="price" id="price" class="form-control rounded-3" required value="<%= listing.price %>">
+                    <div class="invalid-feedback">Enter a valid price.</div>
+                </div>
+
+                <div class="col-md-8 mb-3">
+                    <label for="country" class="form-label fw-semibold">Country</label>
+                    <input type="text" name="country" id="country" class="form-control rounded-3" required value="<%= listing.country %>">
+                    <div class="invalid-feedback">Country should be valid.</div>
+                </div>
+            </div>
+
+            <!-- Location -->
+            <div class="mb-4">
+                <label for="location" class="form-label fw-semibold">Location / City</label>
+                <input type="text" name="location" id="location" class="form-control rounded-3" required value="<%= listing.location %>">
+                <div class="invalid-feedback">Location should be valid.</div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-danger rounded-pill px-5 py-2 fw-semibold" style="background-color: #fe424d; border: none;">
+                    Save Changes
+                </button>
+                <a href="/listings/<%= listing._id %>" class="btn btn-outline-secondary rounded-pill px-4 py-2">
+                    Cancel
+                </a>
+            </div>
+        </form>
     </div>
-   
- 
-    <div class="mb-3">
-  <label for="image" class="form-label">Upload New Image</label>
-    <input type="file" name="image" id="listing-img"class="form-control"  >
-   
-  <div class="row">
- <div class="mb-3 col-md-4">
- <label for="price" class="form-label">Price:</label>
-    <input type="text" name="price" id="price"class="form-control" required value="<%= listing.price  %>">
-     <div class="valid-feedback">Looks good!</div>
-                <div class="invalid-feedback">Enter a valid number</div>
-    </div>
- <div class="mb-3 col-md-8" >
- <label for="country" class="form-label">Country:</label>
-    <input type="text" name="country" id="country" class="form-control" required value="<%= listing.country %>">
-        <div class="valid-feedback">Looks good!</div>
-                <div class="invalid-feedback">country should be valid</div>
-    </div>
-    
 </div>
-   
-   <div class="mb-3">
- <label for="location" class="form-label">Location:</label>
-    <input type="text" name="location" id="location" class="form-control" required value="<%= listing.location %>">
-        <div class="valid-feedback">Looks good!</div>
-                <div class="invalid-feedback">Location should be valid</div>
-    </div>
-   
-  
-   
-   
-    <br>
-    <button class="btn btn-danger">Edit</button>
-    </form>
-</body>
-</div>
-</div>
+
+<script>
+async function polishAiDescription() {
+    const titleInput = document.getElementById("title");
+    const locationInput = document.getElementById("location");
+    const countryInput = document.getElementById("country");
+    const descInput = document.getElementById("description");
+    const statusEl = document.getElementById("aiPolishStatus");
+    const btn = document.getElementById("aiPolishDescBtn");
+
+    const title = titleInput ? titleInput.value.trim() : "";
+    const location = locationInput ? locationInput.value.trim() : "";
+    const country = countryInput ? countryInput.value.trim() : "";
+
+    const originalBtnHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> AI Polishing...`;
+    statusEl.innerHTML = `<span class="text-primary"><i class="fa-solid fa-spinner fa-spin me-1"></i> Enhancing copy with WanderAI...</span>`;
+
+    try {
+        const res = await fetch("/api/ai/generate-description", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title, location, country, propertyType: "Vacation Rental" })
+        });
+        const data = await res.json();
+
+        if (data && data.data) {
+            descInput.value = data.data.description;
+            statusEl.innerHTML = `<span class="text-success fw-semibold"><i class="fa-solid fa-check me-1"></i> Copy enhanced by AI! Review and save changes above.</span>`;
+        } else {
+            statusEl.innerHTML = `<span class="text-danger">Could not enhance copy.</span>`;
+        }
+    } catch (e) {
+        statusEl.innerHTML = `<span class="text-danger">Error connecting to AI.</span>`;
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalBtnHtml;
+    }
+}
+</script>

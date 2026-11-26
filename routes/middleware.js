@@ -43,13 +43,26 @@ return res.redirect(`/listings/${id}`)
 async function isReviewauthor(req,res,next) {
     const {id,reviewId}=req.params;
     let foundreview=await Review.findById(reviewId);
-    if(!review.author.equals(res.locals.currentUser._id)){
+    if(!foundreview || !foundreview.author.equals(res.locals.currentUser._id)){
         req.flash("error","You are not the author of this review");
         return res.redirect(`/listings/${id}`);
     }
     next();
-
-    
 }
 
-module.exports = { isLoggedIn, saveRedirectUrl, isOwner,isReviewauthor };
+async function isBookingOwner(req, res, next) {
+    const Booking = require("../models/booking");
+    const { id } = req.params;
+    let booking = await Booking.findById(id);
+    if (!booking) {
+        req.flash("error", "Booking not found");
+        return res.redirect("/bookings");
+    }
+    if (!booking.user.equals(res.locals.currentUser._id)) {
+        req.flash("error", "You do not have permission to view or manage this booking");
+        return res.redirect("/bookings");
+    }
+    next();
+}
+
+module.exports = { isLoggedIn, saveRedirectUrl, isOwner, isReviewauthor, isBookingOwner };

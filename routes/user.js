@@ -19,12 +19,12 @@ router.post("/signup", wrapAsync(async(req,res,next)=>{
         if(err){
             return next(err);
         }
-           req.flash("success", "Welcome to Wanderlust");
+           req.flash("success", "Welcome to ApnaStay");
     res.redirect("/listings");
     }
 
 )
-    // req.flash("success", "Welcome to Wanderlust");
+    // req.flash("success", "Welcome to ApnaStay");
     // res.redirect("/listings");
 } catch(e){
     req.flash("error", e.message);
@@ -43,19 +43,18 @@ router.post(
         failureFlash: true,
     }),
     async(req,res)=>{
-        req.flash("success","Welcome to WanderLust! You are logged in!");
-        // let redirectUrl=res.locals.redirectUrl;
-        res.redirect(res.locals.redirectUrl || "listings");
+        req.flash("success","Welcome to ApnaStay! You are logged in!");
+        res.redirect(res.locals.redirectUrl || "/listings");
     }
 );
-router.get("/logout", (req,res,next)=>{
-    req.logOut((err)=>{
-        if(err){
-            next(err);
+router.get("/logout", (req, res, next) => {
+    req.logOut((err) => {
+        if (err) {
+            return next(err);
         }
-        req.flash("success","You are logged out!");
-        res.redirect("/listings");
-    })
-})
+        req.flash("success", "You are logged out!");
+        return res.redirect("/listings");
+    });
+});
 
 module.exports=router;

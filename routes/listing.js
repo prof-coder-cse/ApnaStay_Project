@@ -25,8 +25,21 @@ const validateListing = (req, res, next) => {
 //     res.send(req.file);
 // })
 router.get("/", wrapAsync(async (req, res) => {
-    const listings = await Listing.find({});
-    res.render("listings/index", { allListings: listings });
+    const { q } = req.query;
+    let filter = {};
+    if (q && q.trim() !== "") {
+        const queryRegex = new RegExp(q.trim(), "i");
+        filter = {
+            $or: [
+                { title: queryRegex },
+                { location: queryRegex },
+                { country: queryRegex },
+                { description: queryRegex }
+            ]
+        };
+    }
+    const listings = await Listing.find(filter);
+    res.render("listings/index", { allListings: listings, searchQuery: q || "" });
 }));
 // NEW ROUTE
 router.get("/new", isLoggedIn, (req, res) => {
@@ -93,9 +106,9 @@ router.get("/:id", wrapAsync(async (req, res) => {
         path:"author",
     }}).populate("owner");
     if(!listing){
-        req.flash("error","Listing you requested does no")
+        req.flash("error","Listing you requested does not exist!");
+        return res.redirect("/listings");
     }
-    console.log(listing);
     res.render("listings/show", { listing });
 }));
 // EDIT ROUTE

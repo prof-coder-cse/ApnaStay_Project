@@ -1,151 +1,646 @@
 <% layout("/layout/boilerplate") %>
 
-<div class="container mt-4">
-  <div class="row">
-    <div class="col-8 offset-2 listing-card">
-      <h3>Listing Details:</h3>
+<div class="container mt-4 mb-5">
+  <!-- Title & Location Header -->
+  <div class="mb-3">
+    <h2 class="fw-bold mb-1"><%= listing.title %></h2>
+    <div class="d-flex flex-wrap align-items-center gap-3 text-muted small">
+      <span><i class="fa-solid fa-location-dot text-danger me-1"></i><%= listing.location %>, <%= listing.country %></span>
+      <span>&bull;</span>
+      <span><i class="fa-solid fa-user-tie text-primary me-1"></i>Hosted by <strong><%= listing.owner ? listing.owner.username : 'Wanderlust Host' %></strong></span>
+      <span>&bull;</span>
+      <span><i class="fa-solid fa-star text-warning me-1"></i><%= listing.reviews.length %> Review<%= listing.reviews.length === 1 ? '' : 's' %></span>
     </div>
   </div>
 
-   <div class="row mt-3">
-    <div class="col-md-8 offset-md-2 listing-card">
-      <div class="card listing-card">
-        <img src="<%= listing.image.url %>" class="card-img-top show-img" alt="Listing image">
-        <div class="card-body">
-          <p class="card-text">
-            <strong>Title:</strong> <%= listing.title %><br>
-            <i> Owned By:<%= listing.owner.username  %></i>
-            <br>
-            <strong>Description:</strong> <%= listing.description %><br>
-            <strong>Price:</strong> ₹<%= listing.price %><br>
-            <strong>Location:</strong> <%= listing.location %><br>
-            <strong>Country:</strong> <%= listing.country %>
-          </p>
-        </div>
-      </div>
-    </div>
+  <!-- Hero Image -->
+  <div class="position-relative mb-4">
+    <img src="<%= listing.image && listing.image.url ? listing.image.url : 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=80' %>" 
+         class="img-fluid rounded-4 w-100 shadow-sm" 
+         alt="<%= listing.title %>"
+         style="max-height: 480px; object-fit: cover;">
   </div>
-  
 
- <!-- Buttons Row -->
- 
-<% if (currentUser && listing.owner && currentUser._id.equals(listing.owner._id)) { %>
-  <div class="row mt-3">
-    <div class="col-md-2 offset-md-2">
-      <a href="/listings/<%= listing._id %>/edit" class="btn btn-dark w-100">Edit</a>
-    </div>
-    <div class="col-md-2">
-      <form action="/listings/<%= listing._id %>?_method=DELETE" method="POST">
-        <button type="submit" class="btn btn-danger w-100">Delete</button>
-      </form>
-    </div>
-  </div>
-<% } %> 
-  
+  <!-- Main Content Grid -->
+  <div class="row g-4">
+    <!-- Left Column: Details, AI Insights, Reviews, Map -->
+    <div class="col-lg-7 col-md-7">
+      <!-- Description Section -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <h4 class="fw-bold mb-3">About this space</h4>
+        <p class="text-secondary" style="line-height: 1.7; white-space: pre-line;"><%= listing.description %></p>
 
-<div class="offset-2 mt-2">
-  <hr>
-  <% if(currentUser) {%>
-  <h4>Leave a Review</h4>
-</div>
-<div class="offset-2 mt-2">
-  <!-- <form action="/listings/<%= listing._id %>/reviews" method="POST" novalidate class="needs-validation">
-    <div class="mb-3">
-      <label for="rating" class="form-label">Rating (1 to 5)</label>
-      <input type="range" class="form-range" name="review[rating]" id="rating" min="1" max="5" step="1" required>
-    </div>
-  <fieldset class="starability-slot">
-  <legend>First rating:</legend>
-  <input type="radio" id="no-rate" class="input-no-rate" name="review[rating]" value="1" checked />
-  <input type="radio" id="first-rate1" name="review[rating]" value="1" />
-  <label for="first-rate1" title="Terrible">1 star</label>
-  <input type="radio" id="first-rate2" name="review[rating]" value="2" />
-  <label for="first-rate2" title="Not good">2 stars</label>
-  <input type="radio" id="first-rate3" name="review[rating]" value="3" />
-  <label for="first-rate3" title="Average">3 stars</label>
-  <input type="radio" id="first-rate4" name="review[rating]" value="4" />
-  <label for="first-rate4" title="Very good">4 stars</label>
-  <input type="radio" id="first-rate5" name="review[rating]" value="5" />
-  <label for="first-rate5" title="Amazing">5 stars</label>
-</fieldset> -->
-<form action="/listings/<%= listing.id %>/reviews" method="POST" novalidate class="needs-validation">
-            <div class="mb-3 mt-3">
-
-                <!-- <input type="range" min="1" max="5" name="" id="rating" class="form-range"> -->
-            <label for="rating" class="form-label">Rating:</label>
-            <fieldset class="starability-slot">
-                <input type="radio" id="no-rate" class="input-no-rate" name="review[rating]" value="1" checked aria-label="No rating." />
-                <input type="radio" id="first-rate1" name="review[rating]" value="1" />
-                <label for="first-rate1" title="Terrible">1 star</label>
-                <input type="radio" id="first-rate2" name="review[rating]" value="2" />
-                <label for="first-rate2" title="Not good">2 stars</label>
-                <input type="radio" id="first-rate3" name="review[rating]" value="3" />
-                <label for="first-rate3" title="Average">3 stars</label>
-                <input type="radio" id="first-rate4" name="review[rating]" value="4" />
-                <label for="first-rate4" title="Very good">4 stars</label>
-                <input type="radio" id="first-rate5" name="review[rating]" value="5" />
-                <label for="first-rate5" title="Amazing">5 stars</label>
-            </fieldset>
-            </div>
-
-    <div class="mb-3">
-      <label for="text" class="form-label">Your Review</label>
-      <textarea class="form-control" name="review[comment]" id="text" rows="4" required></textarea>
-   
-    <div class="invalid-feedback">Please write some review</div>
- </div>
-    <button type="submit" class="btn btn-outline-dark">Submit Review</button>
-  </form>
-<%}%>
-  <hr>
-  <!-- <div class="container mt-4">
-  <h4>All Reviews!</h4>
-
-  <div class="row">
-    <% for (review of listing.reviews) { %>
-      <div class="col-md-5 ms-3 mb-3">
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Jane Doe</h5>
-            <p class="card-text"><%= review.comment %></p>
-            <p class="card-text">Rating: <%= review.rating %></p>
-          </div>
-        </div>
-      </div>
-    <% } %>
-  </div>
-</div> -->
-<div class="container mt-4">
-  <h4>All Reviews!</h4>
-
-  <div class="row">
-    <% for (review of listing.reviews) { %>
-      <div class="col-md-5 ms-3 mb-3">
-        <div class="card">
-          <div class="card-body ms-3">
-            <h5 class="card-title"><%= review.author ? review.author.username : "Anonymouus" %></h5>
-            <p class="starability-result card-text" data-rating="<%= review.rating %>"></p>
-            <p class="card-text"><%= review.comment %></p>
-       
-
-
-
-            <!-- Delete Button Form -->
-            <form action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE" method="POST" class="mt-1 mb-2">
-              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+        <!-- Host Actions (Edit/Delete) -->
+        <% if (currentUser && listing.owner && currentUser._id.equals(listing.owner._id)) { %>
+          <div class="d-flex gap-2 pt-3 border-top mt-2">
+            <a href="/listings/<%= listing._id %>/edit" class="btn btn-dark rounded-pill px-4">
+              <i class="fa-solid fa-pen-to-square me-1"></i> Edit Listing
+            </a>
+            <form action="/listings/<%= listing._id %>?_method=DELETE" method="POST" class="d-inline">
+              <button type="submit" class="btn btn-outline-danger rounded-pill px-4" onclick="return confirm('Are you sure you want to delete this listing?');">
+                <i class="fa-solid fa-trash me-1"></i> Delete
+              </button>
             </form>
+          </div>
+        <% } %>
+      </div>
 
+      <!-- AI Review Insights & Sentiment Banner -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="background: linear-gradient(145deg, #f8f9ff, #eef2ff); border: 1px solid #e0e7ff !important;">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary text-white rounded-pill px-2 py-1" style="font-size: 0.75rem;">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> AI Analysis
+            </span>
+            <h5 class="fw-bold mb-0 text-dark">Guest Consensus & Sentiment</h5>
+          </div>
+          <button id="refreshAiInsightsBtn" class="btn btn-sm btn-outline-primary rounded-pill" onclick="loadAiReviewInsights()">
+            <i class="fa-solid fa-rotate-right me-1"></i> Refresh
+          </button>
+        </div>
+
+        <div id="aiInsightsContent">
+          <div class="d-flex align-items-center gap-2 text-muted small py-2">
+            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+            <span>Analyzing <%= listing.reviews.length %> guest reviews with WanderAI...</span>
           </div>
         </div>
       </div>
-    <% } %>
+
+      <!-- Reviews Section -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h4 class="fw-bold mb-0">
+            <i class="fa-solid fa-comments text-danger me-2"></i>Guest Reviews (<%= listing.reviews.length %>)
+          </h4>
+        </div>
+
+        <!-- Leave a Review Form -->
+        <% if (currentUser) { %>
+          <div class="p-3 bg-light rounded-4 mb-4 border">
+            <h5 class="fw-bold mb-3">Leave a Review</h5>
+            <form action="/listings/<%= listing._id %>/reviews" method="POST" novalidate class="needs-validation">
+              <div class="mb-3">
+                <label class="form-label fw-semibold small text-muted">Rating</label>
+                <fieldset class="starability-slot">
+                  <input type="radio" id="no-rate" class="input-no-rate" name="review[rating]" value="1" checked aria-label="No rating." />
+                  <input type="radio" id="first-rate1" name="review[rating]" value="1" />
+                  <label for="first-rate1" title="Terrible">1 star</label>
+                  <input type="radio" id="first-rate2" name="review[rating]" value="2" />
+                  <label for="first-rate2" title="Not good">2 stars</label>
+                  <input type="radio" id="first-rate3" name="review[rating]" value="3" />
+                  <label for="first-rate3" title="Average">3 stars</label>
+                  <input type="radio" id="first-rate4" name="review[rating]" value="4" />
+                  <label for="first-rate4" title="Very good">4 stars</label>
+                  <input type="radio" id="first-rate5" name="review[rating]" value="5" />
+                  <label for="first-rate5" title="Amazing">5 stars</label>
+                </fieldset>
+              </div>
+
+              <div class="mb-3">
+                <label for="comment" class="form-label fw-semibold small text-muted">Your Experience</label>
+                <textarea class="form-control rounded-3" name="review[comment]" id="comment" rows="3" placeholder="How was your stay? Mention highlights, cleanliness, or location..." required></textarea>
+                <div class="invalid-feedback">Please share your comments before submitting.</div>
+              </div>
+
+              <button type="submit" class="btn btn-dark rounded-pill px-4">Submit Review</button>
+            </form>
+          </div>
+        <% } else { %>
+          <div class="alert alert-light border rounded-3 p-3 mb-4">
+            <i class="fa-solid fa-lock text-muted me-1"></i>
+            <a href="/login" class="fw-bold text-danger text-decoration-none">Log in</a> to share your review for this property.
+          </div>
+        <% } %>
+
+        <!-- Reviews List -->
+        <% if (listing.reviews.length === 0) { %>
+          <p class="text-muted text-center py-3">No reviews yet. Be the first to share your experience!</p>
+        <% } else { %>
+          <div class="row g-3">
+            <% for (let review of listing.reviews) { %>
+              <div class="col-12">
+                <div class="border rounded-3 p-3 bg-white">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="rounded-circle bg-danger text-white d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                        <%= review.author && review.author.username ? review.author.username.charAt(0).toUpperCase() : 'G' %>
+                      </div>
+                      <span class="fw-bold text-dark"><%= review.author ? review.author.username : "Guest" %></span>
+                    </div>
+
+                    <!-- Only review author can delete their review -->
+                    <% if (currentUser && review.author && currentUser._id.equals(review.author._id)) { %>
+                      <form action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-link text-danger p-0" title="Delete Review" onclick="return confirm('Delete this review?');">
+                          <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                      </form>
+                    <% } %>
+                  </div>
+
+                  <p class="starability-result my-1" data-rating="<%= review.rating %>"></p>
+                  <p class="text-secondary small mb-0"><%= review.comment %></p>
+                </div>
+              </div>
+            <% } %>
+          </div>
+        <% } %>
+      </div>
+
+      <!-- Map Location Section -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <h4 class="fw-bold mb-2"><i class="fa-solid fa-map-location-dot text-danger me-2"></i>Where you'll be</h4>
+        <p class="text-muted small mb-3"><%= listing.location %>, <%= listing.country %></p>
+        <div id="map" style="height: 300px; border-radius: 12px; z-index: 1;"></div>
+      </div>
+    </div>
+
+    <!-- Right Column: Sticky Booking Widget -->
+    <div class="col-lg-5 col-md-5">
+      <div class="sticky-top" style="top: 100px; z-index: 10;">
+        <div class="card border-0 shadow-lg rounded-4 p-4 bg-white">
+          <div class="d-flex justify-content-between align-items-baseline mb-3 pb-3 border-bottom">
+            <div>
+              <span class="fs-3 fw-bold text-dark">&#8377;<%= listing.price ? listing.price.toLocaleString("en-IN") : 0 %></span>
+              <span class="text-muted"> / night</span>
+            </div>
+            <div class="text-muted small">
+              <i class="fa-solid fa-star text-warning me-1"></i><%= listing.reviews.length > 0 ? (listing.reviews.reduce((a, b) => a + Number(b.rating), 0) / listing.reviews.length).toFixed(1) : 'New' %>
+            </div>
+          </div>
+
+          <% if (currentUser && listing.owner && currentUser._id.equals(listing.owner._id)) { %>
+            <!-- Owner notice -->
+            <div class="alert alert-info border-0 rounded-3 text-center mb-0">
+              <i class="fa-solid fa-house-chimney-user fa-2x mb-2 d-block text-primary"></i>
+              <strong>You are the Host of this property</strong>
+              <p class="small text-muted mb-0 mt-1">Manage your listing details or view reviews on the left.</p>
+            </div>
+          <% } else { %>
+            <!-- Reservation Form -->
+            <form action="/listings/<%= listing._id %>/bookings" method="POST" id="bookingForm">
+              <!-- Dates Selection Box -->
+              <div class="border rounded-3 overflow-hidden mb-3">
+                <div class="row g-0">
+                  <div class="col-6 p-2 border-end bg-light">
+                    <label for="checkInInput" class="form-label small text-muted text-uppercase fw-semibold mb-0" style="font-size: 0.7rem;">CHECK-IN</label>
+                    <input type="date" id="checkInInput" name="checkIn" class="form-control form-control-sm border-0 bg-transparent fw-semibold" required>
+                  </div>
+                  <div class="col-6 p-2 bg-light">
+                    <label for="checkOutInput" class="form-label small text-muted text-uppercase fw-semibold mb-0" style="font-size: 0.7rem;">CHECKOUT</label>
+                    <input type="date" id="checkOutInput" name="checkOut" class="form-control form-control-sm border-0 bg-transparent fw-semibold" required>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Guests Dropdown -->
+              <div class="mb-3">
+                <label for="guestsSelect" class="form-label small text-muted text-uppercase fw-semibold mb-1" style="font-size: 0.7rem;">GUESTS</label>
+                <select class="form-select rounded-3" id="guestsSelect" name="guests">
+                  <option value="1">1 Guest</option>
+                  <option value="2" selected>2 Guests</option>
+                  <option value="3">3 Guests</option>
+                  <option value="4">4 Guests</option>
+                  <option value="5">5 Guests</option>
+                  <option value="6">6+ Guests</option>
+                </select>
+              </div>
+
+              <!-- Live Cost Breakdown -->
+              <div id="priceCalculationBox" class="bg-light p-3 rounded-3 mb-3 d-none">
+                <div class="d-flex justify-content-between text-muted small mb-1">
+                  <span id="nightlyCalculationLabel">&#8377;<%= listing.price %> &times; 1 night</span>
+                  <span id="nightlyTotalVal" class="fw-semibold text-dark">&#8377;<%= listing.price %></span>
+                </div>
+                <div class="d-flex justify-content-between text-muted small mb-1">
+                  <span>Wanderlust Service fee (5%)</span>
+                  <span id="serviceFeeVal" class="fw-semibold text-dark">&#8377;0</span>
+                </div>
+                <div class="d-flex justify-content-between text-muted small mb-2">
+                  <span>Applicable GST / Taxes (12%)</span>
+                  <span id="taxVal" class="fw-semibold text-dark">&#8377;0</span>
+                </div>
+                <div class="d-flex justify-content-between border-top pt-2">
+                  <strong class="text-dark">Total Amount</strong>
+                  <strong id="totalPriceVal" class="text-success fs-5">&#8377;0</strong>
+                </div>
+              </div>
+
+              <!-- Conflict Notice Placeholder -->
+              <div id="bookingConflictAlert" class="alert alert-danger small d-none mb-3">
+                <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                <span id="bookingConflictMessage">These dates are unavailable.</span>
+              </div>
+
+              <!-- Book Now Button -->
+              <% if (currentUser) { %>
+                <button type="submit" id="reserveBtn" class="btn btn-danger w-100 py-3 rounded-pill fw-bold fs-6 shadow-sm" style="background-color: #fe424d; border: none;">
+                  <i class="fa-solid fa-calendar-check me-2"></i> Reserve Now
+                </button>
+              <% } else { %>
+                <a href="/login" class="btn btn-danger w-100 py-3 rounded-pill fw-bold fs-6 shadow-sm text-center" style="background-color: #fe424d; border: none;">
+                  <i class="fa-solid fa-arrow-right-to-bracket me-2"></i> Log in to Reserve
+                </a>
+              <% } %>
+
+              <p class="text-muted small text-center mt-2 mb-0">You won't be charged yet &bull; Free cancellation</p>
+            </form>
+          <% } %>
+        </div>
+
+        <!-- Quick AI Assistant Banner -->
+        <div class="card border-0 shadow-sm rounded-4 p-3 mt-3 bg-white d-flex flex-row align-items-center gap-3">
+          <div class="rounded-circle bg-danger-subtle text-danger d-flex align-items-center justify-content-center p-3" style="width: 48px; height: 48px;">
+            <i class="fa-solid fa-wand-magic-sparkles fs-5"></i>
+          </div>
+          <div>
+            <h6 class="fw-bold mb-0">Have questions about this stay?</h6>
+            <small class="text-muted">Ask our AI Concierge for local food, itineraries, and packing advice.</small>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-  
-
- 
 </div>
 
-
-  
+<!-- ================= WANDERAI CONCIERGE FLOATING CHAT WIDGET ================= -->
+<div id="wanderAiFloatingTrigger" class="position-fixed bottom-0 end-0 m-4 z-3">
+  <button id="toggleAiDrawerBtn" class="btn btn-dark rounded-pill px-4 py-3 shadow-lg d-flex align-items-center gap-2 border border-secondary" style="background: linear-gradient(135deg, #111827, #374151); transition: transform 0.2s;">
+    <i class="fa-solid fa-wand-magic-sparkles text-danger"></i>
+    <span class="fw-bold">Ask ApnaStay Concierge</span>
+  </button>
 </div>
 
+<!-- WanderAI Chat Drawer / Modal -->
+<div id="wanderAiDrawer" class="card shadow-2xl rounded-4 position-fixed bottom-0 end-0 m-4 z-3 d-none border-0" style="width: 380px; max-height: 580px; display: flex; flex-direction: column;">
+  <!-- Drawer Header -->
+  <div class="card-header bg-dark text-white rounded-top-4 p-3 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #1f2937, #111827);">
+    <div class="d-flex align-items-center gap-2">
+      <div class="rounded-circle bg-danger p-2 text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 0.8rem;">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+      </div>
+      <div>
+        <h6 class="fw-bold mb-0">ApnaStay Concierge</h6>
+        <small class="text-white-50" style="font-size: 0.7rem;">Your local travel guide for <%= listing.location %></small>
+      </div>
+    </div>
+    <button id="closeAiDrawerBtn" class="btn-close btn-close-white" aria-label="Close"></button>
+  </div>
+
+  <!-- Chat Messages Body -->
+  <div id="aiChatBody" class="card-body p-3 overflow-auto flex-grow-1" style="height: 340px; background-color: #f8fafc; font-size: 0.88rem;">
+    <!-- Welcome message -->
+    <div class="d-flex mb-3">
+      <div class="bg-white p-3 rounded-4 shadow-sm border" style="max-width: 90%;">
+        👋 <strong>Hi there!</strong> I'm your AI Concierge for <strong><%= listing.title %></strong> in <%= listing.location %>, <%= listing.country %>.
+        <div class="mt-2 text-muted small">Choose a suggestion or ask me anything!</div>
+      </div>
+    </div>
+
+    <!-- Quick action chips -->
+    <div class="d-flex flex-wrap gap-1 mb-3" id="aiSuggestionChips">
+      <button class="btn btn-sm btn-outline-secondary rounded-pill chip-btn" style="font-size: 0.75rem;" onclick="askAiPrompt('Plan a 2-day itinerary for my stay here')">🗺️ 2-Day Itinerary</button>
+      <button class="btn btn-sm btn-outline-secondary rounded-pill chip-btn" style="font-size: 0.75rem;" onclick="askAiPrompt('Recommend the best restaurants and food nearby')">🍽️ Best Food & Cafes</button>
+      <button class="btn btn-sm btn-outline-secondary rounded-pill chip-btn" style="font-size: 0.75rem;" onclick="askAiPrompt('What should I pack for this trip?')">🎒 Packing Essentials</button>
+      <button class="btn btn-sm btn-outline-secondary rounded-pill chip-btn" style="font-size: 0.75rem;" onclick="askAiPrompt('Top attractions and sights near <%= listing.location %>')">📍 Nearby Sights</button>
+    </div>
+  </div>
+
+  <!-- Chat Input Footer -->
+  <div class="card-footer bg-white border-top p-2 rounded-bottom-4">
+    <form id="aiChatForm" class="d-flex gap-2">
+      <input type="text" id="aiQueryInput" class="form-control rounded-pill border-1 ps-3" placeholder="Ask about food, sights, itinerary..." style="font-size: 0.85rem;" required>
+      <button type="submit" id="sendAiBtn" class="btn btn-danger rounded-circle d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; background-color: #fe424d; border: none;">
+        <i class="fa-solid fa-paper-plane" style="font-size: 0.8rem;"></i>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ================= JAVASCRIPT: BOOKING ENGINE & AI LOGIC ================= -->
+<div id="listing-data" hidden
+     data-id="<%= listing._id %>"
+     data-price="<%= Number(listing.price) || 0 %>"
+     data-review-count="<%= listing.reviews.length %>"
+     data-location="<%= listing.location || '' %>"
+     data-country="<%= listing.country || '' %>"></div>
+<script>
+  const listingData = document.getElementById("listing-data").dataset;
+const LISTING_ID = listingData.id;
+const PRICE_PER_NIGHT = Number(listingData.price) || 0;
+const REVIEW_COUNT = Number(listingData.reviewCount) || 0;
+const LISTING_LOCATION = listingData.location;
+const LISTING_COUNTRY = listingData.country;
+
+  let bookedDateRanges = [];
+
+  const checkInInput = document.getElementById("checkInInput");
+  const checkOutInput = document.getElementById("checkOutInput");
+  const priceBox = document.getElementById("priceCalculationBox");
+  const conflictAlert = document.getElementById("bookingConflictAlert");
+  const conflictMessage = document.getElementById("bookingConflictMessage");
+  const reserveBtn = document.getElementById("reserveBtn");
+
+  function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text == null ? "" : String(text);
+    return div.innerHTML;
+  }
+
+  // Local (not UTC) YYYY-MM-DD
+  function toLocalISO(d) {
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split("T")[0];
+  }
+
+  // 1. Booked dates
+  async function fetchBookedDates() {
+    try {
+      const res = await fetch(`/listings/${LISTING_ID}/booked-dates`);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+      if (data && Array.isArray(data.bookedDates)) bookedDateRanges = data.bookedDates;
+    } catch (e) {
+      console.log("Could not load booked dates:", e);
+    }
+    recalculatePricing(); // re-check once data has arrived
+  }
+
+  if (checkInInput && checkOutInput) {
+    checkInInput.min = toLocalISO(new Date());
+
+    checkInInput.addEventListener("change", () => {
+      if (checkInInput.value) {
+        const next = new Date(checkInInput.value); // parsed as UTC, formatted as UTC: consistent
+        next.setUTCDate(next.getUTCDate() + 1);
+        const nextStr = next.toISOString().split("T")[0];
+        checkOutInput.min = nextStr;
+        if (checkOutInput.value && new Date(checkOutInput.value) <= new Date(checkInInput.value)) {
+          checkOutInput.value = nextStr;
+        }
+      }
+      recalculatePricing();
+    });
+
+    checkOutInput.addEventListener("change", recalculatePricing);
+  }
+
+  function showConflict(msg) {
+    if (conflictAlert) {
+      conflictAlert.classList.remove("d-none");
+      if (conflictMessage) conflictMessage.textContent = msg;
+    }
+    if (reserveBtn) reserveBtn.disabled = true;
+    if (priceBox) priceBox.classList.add("d-none");
+  }
+
+  function recalculatePricing() {
+    if (!checkInInput || !checkOutInput) return;
+    const inVal = checkInInput.value;
+    const outVal = checkOutInput.value;
+
+    if (!inVal || !outVal) {
+      if (priceBox) priceBox.classList.add("d-none");
+      if (conflictAlert) conflictAlert.classList.add("d-none");
+      if (reserveBtn) reserveBtn.disabled = false;
+      return;
+    }
+
+    const inDate = new Date(inVal);
+    const outDate = new Date(outVal);
+
+    if (outDate <= inDate) {
+      showConflict("Check-out date must be after check-in date.");
+      return;
+    }
+
+    const hasConflict = bookedDateRanges.some(range => {
+      const from = new Date(range.from);
+      const to = new Date(range.to);
+      return inDate < to && outDate > from;
+    });
+
+    if (hasConflict) {
+      showConflict("Selected dates overlap with an existing confirmed reservation.");
+      return;
+    }
+
+    if (conflictAlert) conflictAlert.classList.add("d-none");
+    if (reserveBtn) reserveBtn.disabled = false;
+
+    const nights = Math.round((outDate - inDate) / 86400000);
+    const nightlyTotal = PRICE_PER_NIGHT * nights;
+    const serviceFee = Math.round(nightlyTotal * 0.05);
+    const tax = Math.round(nightlyTotal * 0.12);
+    const grandTotal = nightlyTotal + serviceFee + tax;
+    const fmt = n => `₹${n.toLocaleString("en-IN")}`;
+
+    document.getElementById("nightlyCalculationLabel").textContent = `${fmt(PRICE_PER_NIGHT)} × ${nights} night${nights > 1 ? "s" : ""}`;
+    document.getElementById("nightlyTotalVal").textContent = fmt(nightlyTotal);
+    document.getElementById("serviceFeeVal").textContent = fmt(serviceFee);
+    document.getElementById("taxVal").textContent = fmt(tax);
+    document.getElementById("totalPriceVal").textContent = fmt(grandTotal);
+
+    if (priceBox) priceBox.classList.remove("d-none");
+  }
+
+  // 2. AI review insights
+  async function loadAiReviewInsights() {
+    const container = document.getElementById("aiInsightsContent");
+    if (!container) return;
+
+    if (REVIEW_COUNT === 0) {
+      container.innerHTML = `<span class="text-muted small">No reviews yet, so there is nothing to analyse.</span>`;
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="d-flex align-items-center gap-2 text-muted small py-2">
+        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+        <span>Analyzing ${REVIEW_COUNT} guest review${REVIEW_COUNT === 1 ? "" : "s"} with WanderAI...</span>
+      </div>`;
+
+    try {
+      const res = await fetch(`/api/ai/summarize-reviews/${LISTING_ID}`);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+
+      if (!data || !data.insights) throw new Error("No insights returned");
+      const ins = data.insights;
+      const list = arr => (Array.isArray(arr) ? arr : []).map(x => `<li>${escapeHtml(x)}</li>`).join("");
+
+      container.innerHTML = `
+        <div class="mb-2">
+          <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 fw-bold">
+            <i class="fa-solid fa-chart-line me-1"></i> Sentiment: ${escapeHtml(ins.sentiment)}
+          </span>
+        </div>
+        <p class="text-secondary small mb-2">${escapeHtml(ins.summary)}</p>
+        <div class="row g-2 pt-1">
+          <div class="col-sm-6">
+            <span class="text-success small fw-bold d-block mb-1"><i class="fa-solid fa-thumbs-up me-1"></i> Highlights:</span>
+            <ul class="text-muted small ps-3 mb-0">${list(ins.pros)}</ul>
+          </div>
+          <div class="col-sm-6">
+            <span class="text-warning small fw-bold d-block mb-1"><i class="fa-solid fa-circle-info me-1"></i> Note:</span>
+            <ul class="text-muted small ps-3 mb-0">${list(ins.cons)}</ul>
+          </div>
+        </div>`;
+    } catch (e) {
+      container.innerHTML = `<span class="text-muted small">Could not load AI review analysis.</span>`;
+    }
+  }
+
+  // 3. WanderAI Concierge
+  const toggleBtn = document.getElementById("toggleAiDrawerBtn");
+  const closeBtn = document.getElementById("closeAiDrawerBtn");
+  const drawer = document.getElementById("wanderAiDrawer");
+  const chatBody = document.getElementById("aiChatBody");
+  const chatForm = document.getElementById("aiChatForm");
+  const queryInput = document.getElementById("aiQueryInput");
+  const sendBtn = document.getElementById("sendAiBtn");
+
+  if (toggleBtn && drawer) {
+    toggleBtn.addEventListener("click", () => {
+      drawer.classList.remove("d-none");
+      toggleBtn.classList.add("d-none");
+    });
+  }
+  if (closeBtn && drawer) {
+    closeBtn.addEventListener("click", () => {
+      drawer.classList.add("d-none");
+      if (toggleBtn) toggleBtn.classList.remove("d-none");
+    });
+  }
+
+  document.querySelectorAll(".chip-btn").forEach(btn => {
+    btn.addEventListener("click", () => askAiPrompt(btn.dataset.prompt));
+  });
+
+  function askAiPrompt(text) {
+    if (queryInput) {
+      queryInput.value = text;
+      handleAiChatSubmit();
+    }
+  }
+
+  if (chatForm) {
+    chatForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      handleAiChatSubmit();
+    });
+  }
+
+  async function handleAiChatSubmit() {
+    const message = queryInput.value.trim();
+    if (!message) return;
+
+    const userMsgEl = document.createElement("div");
+    userMsgEl.className = "d-flex justify-content-end mb-2";
+    userMsgEl.innerHTML = `
+      <div class="bg-danger text-white p-2 px-3 rounded-4 shadow-sm" style="max-width: 85%; font-size: 0.85rem; background-color: #fe424d !important;">
+        ${escapeHtml(message)}
+      </div>`;
+    chatBody.appendChild(userMsgEl);
+    queryInput.value = "";
+    if (sendBtn) sendBtn.disabled = true;
+
+    const loadingEl = document.createElement("div");
+    loadingEl.className = "d-flex mb-2";
+    loadingEl.innerHTML = `
+      <div class="bg-white p-2 px-3 rounded-4 shadow-sm border text-muted small d-flex align-items-center gap-2">
+        <div class="spinner-border spinner-border-sm text-danger" role="status"></div>
+        <span>WanderAI thinking...</span>
+      </div>`;
+    chatBody.appendChild(loadingEl);
+    chatBody.scrollTop = chatBody.scrollHeight;
+
+    try {
+      const res = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message, listingId: LISTING_ID })
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+      loadingEl.remove();
+
+      const botMsgEl = document.createElement("div");
+      botMsgEl.className = "d-flex mb-2";
+      botMsgEl.innerHTML = `
+        <div class="bg-white p-3 rounded-4 shadow-sm border" style="max-width: 90%; font-size: 0.84rem; line-height: 1.5;">
+          <div class="d-flex align-items-center justify-content-between mb-1 pb-1 border-bottom">
+            <span class="badge bg-danger-subtle text-danger" style="font-size: 0.65rem;">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> ${escapeHtml(data.source || "WanderAI")}
+            </span>
+          </div>
+          <div>${formatMarkdownToHtml(data.response || "Sorry, I could not process your query.")}</div>
+        </div>`;
+      chatBody.appendChild(botMsgEl);
+    } catch (e) {
+      loadingEl.remove();
+      const errorEl = document.createElement("div");
+      errorEl.className = "text-danger small my-1";
+      errorEl.textContent = "Error contacting WanderAI. Please try again.";
+      chatBody.appendChild(errorEl);
+    } finally {
+      if (sendBtn) sendBtn.disabled = false;
+      chatBody.scrollTop = chatBody.scrollHeight;
+    }
+  }
+
+  // Escape FIRST, then apply light markdown
+  function formatMarkdownToHtml(str) {
+    if (!str) return "";
+    return escapeHtml(str)
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/(^|[^*])\*(?!\s)(.+?)\*(?!\*)/g, "$1<em>$2</em>")
+      .replace(/\n\n/g, "<br><br>")
+      .replace(/\n/g, "<br>");
+  }
+
+  // 4. Leaflet map
+  function initLeafletMap() {
+    if (typeof L === "undefined") return;
+    const mapContainer = document.getElementById("map");
+    if (!mapContainer) return;
+
+    const query = encodeURIComponent(`${LISTING_LOCATION}, ${LISTING_COUNTRY}`);
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${query}`)
+      .then(res => res.json())
+      .then(results => {
+        const found = results && results.length > 0;
+        const lat = found ? parseFloat(results[0].lat) : 28.6139;
+        const lon = found ? parseFloat(results[0].lon) : 77.2090;
+
+        const map = L.map("map").setView([lat, lon], found ? 12 : 5);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 19,
+          attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+
+        if (found) {
+          const popup = document.createElement("div");
+          popup.innerHTML = `<b></b><br>Exact location provided after booking.`;
+          popup.querySelector("b").textContent = LISTING_LOCATION;
+          L.marker([lat, lon]).addTo(map).bindPopup(popup).openPopup();
+        } else {
+          mapContainer.insertAdjacentHTML("afterend",
+            `<p class="text-muted small mt-2 mb-0">Couldn't pinpoint this location on the map.</p>`);
+        }
+      })
+      .catch(() => {
+        const map = L.map("map").setView([28.6139, 77.2090], 5);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 19,
+          attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+      });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    fetchBookedDates();
+    loadAiReviewInsights();
+    initLeafletMap();
+  });
+</script>
