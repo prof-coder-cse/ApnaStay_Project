@@ -100,6 +100,85 @@ function parseJson(raw) {
 
 const has = (text, words) => words.some(w => new RegExp(`\\b${w}`, "i").test(text));
 
+// ---------- Free fallback data sources (no API keys) ----------
+async function geocode(place) {
+    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(place)}&count=1`);
+    const g = (await res.json()).results?.[0];
+    return g ? { lat: g.latitude, lon: g.longitude, name: g.name } : null;
+}
+
+async function getWeather(place) {
+    try {
+        const g = await geocode(place);
+        if (!g) return null;
+        const w = await (await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${g.lat}&longitude=${g.lon}` +
+            `&current=temperature_2m,apparent_temperature&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max` +
+            `&timezone=auto&forecast_days=3`
+        )).json();
+        const days = w.daily.time.map((d, i) =>
+            `- ${d}: ${Math.round(w.daily.temperature_2m_min[i])}–${Math.round(w.daily.temperature_2m_max[i])}°C, ${w.daily.precipitation_probability_max[i]}% chance of rain`
+        );
+        return `Right now in ${g.name}: ${Math.round(w.current.temperature_2m)}°C (feels like ${Math.round(w.current.apparent_temperature)}°C)\n\n**Next 3 days**\n${days.join("\n")}`;
+    } catch {
+        return null;
+    }
+}
+
+const OSM_QUERIES = {
+    food: `node["amenity"~"restaurant|cafe"]["name"]`,
+    sights: `node["tourism"~"attraction|viewpoint|museum|gallery"]["name"]`
+};
+
+async function findNearby(place, kind = "food", radiusM = 4000, limit = 8) {
+    try {
+        const g = await geocode(place);
+        if (!g || !OSM_QUERIES[kind]) return null;
+        const q = `[out:json][timeout:15];${OSM_QUERIES[kind]}(around:${radiusM},${g.lat},${g.lon});out 60;`;
+        const res = await fetch("https://overpass-api.de/api/interpreter", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "data=" + encodeURIComponent(q),
+            signal: AbortSignal.timeout(15000)
+        });
+        if (!res.ok) return null;
+        const items = (await res.json()).elements || [];
+        const top = items
+            .map(e => ({ t: e.tags, score: ["cuisine", "website", "opening_hours", "phone"].filter(k => e.tags[k]).length }))
+            .sort((a, b) => b.score - a.score)
+            .slice(0, limit);
+        if (!top.length) return null;
+        return top.map(({ t }) => {
+            const extra = t.cuisine ? ` (${t.cuisine.replace(/;/g, ", ").replace(/_/g, " ")})` : t.amenity ? ` (${t.amenity})` : "";
+            return `- ${t.name}${extra}`;
+        });
+    } catch {
+        return null;
+    }
+}
+
+// Temporary debug helper: shows WHY Gemini is failing (never returns the key itself)
+async function diagnoseGemini() {
+    const key = process.env.GEMINI_API_KEY || process.env.AI_API_KEY;
+    const out = { nodeVersion: process.version, keyLoaded: !!key, model: MODEL };
+    if (!key) {
+        out.problem = "No GEMINI_API_KEY in the server's environment variables.";
+        return out;
+    }
+    try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+            body: JSON.stringify({ contents: [{ parts: [{ text: "Say OK" }] }] })
+        });
+        out.httpStatus = res.status;
+        out.body = (await res.text()).slice(0, 500);
+    } catch (e) {
+        out.problem = "Request failed: " + e.message;
+    }
+    return out;
+}
+
 // ---------- 1. Concierge ----------
 async function chatWithConcierge(message, listing = {}, history = []) {
     const loc = listing.location || "";
@@ -129,7 +208,10 @@ RULES:
     const m = String(message || "");
     let reply;
 
-    if (has(m, ["itinerar", "plan", "schedule", "days?", "trip"])) {
+    if (has(m, ["weather", "climate", "temperature", "rain", "forecast"])) {
+        const w = await getWeather(loc || title);
+        reply = w ? `🌤️ **Weather in ${place}**\n${w}` : `I couldn't fetch the weather for ${place} right now. Please try again shortly.`;
+    } else if (has(m, ["itinerar", "plan", "schedule", "days?", "trip"])) {
         reply = `**A flexible 2-day outline for ${place}** (staying at ${title})
 
 **Day 1** – Settle in, then explore the main area of ${loc || "the town"} on foot. Try a local meal for dinner.
@@ -137,10 +219,11 @@ RULES:
 
 My live AI service is unavailable right now, so I can't give specific place names. Ask your host for their top picks, or retry in a moment for a detailed plan.`;
     } else if (has(m, ["food", "eat", "restaurant", "cafe", "dinner", "lunch", "breakfast"])) {
-        reply = `For food in ${place}, I'd suggest trying the **regional specialties** the area is known for, from small local eateries rather than tourist-facing places.
-
-My live AI service is unavailable right now, so I can't name specific restaurants reliably. Your host and recent Google Maps reviews are the best sources for current picks.`;
-    } else if (has(m, ["pack", "weather", "bring", "wear", "climate"])) {
+        const list = await findNearby(loc || title, "food");
+        reply = list
+            ? `🍽️ **Places to eat near ${loc || title}** (OpenStreetMap data):\n${list.join("\n")}\n\nCheck Google Maps for current hours and reviews.`
+            : `I couldn't load restaurant data for ${place} right now. Please try again shortly.`;
+    } else if (has(m, ["pack", "bring", "wear"])) {
         reply = `**General packing list for ${place}:**
 - Comfortable walking shoes
 - Clothing suited to the season (check the forecast a few days before travel)
@@ -149,7 +232,10 @@ My live AI service is unavailable right now, so I can't name specific restaurant
 
 Retry shortly for climate-specific advice.`;
     } else if (has(m, ["attraction", "visit", "sight", "see", "things to do", "activit"])) {
-        reply = `I can't fetch verified attractions for ${place} right now because the live AI service is unreachable. Please retry in a moment, or ask the host for nearby recommendations.`;
+        const list = await findNearby(loc || title, "sights");
+        reply = list
+            ? `📍 **Sights & attractions near ${loc || title}** (OpenStreetMap data):\n${list.join("\n")}`
+            : `I couldn't load attraction data for ${place} right now. Please try again shortly.`;
     } else if (has(m, ["hi", "hello", "hey", "help"]) && m.trim().split(/\s+/).length <= 4) {
         reply = `👋 Hi! I'm WanderAI, your concierge for **${title}** in **${place}**. Ask me for an itinerary, food ideas, packing tips, or things to do nearby.`;
     } else {
@@ -343,4 +429,4 @@ Rules: mention ONLY the amenities listed above. Do not invent Wi-Fi, pools, view
     };
 }
 
-module.exports = { chatWithConcierge, summarizeReviews, generateListingDescription };
+module.exports = { chatWithConcierge, summarizeReviews, generateListingDescription, diagnoseGemini };
